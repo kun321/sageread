@@ -88,8 +88,17 @@ export const createReaderStore = (bookId: string) => {
 
         const arrayBuffer = await response.arrayBuffer();
         const filename = simpleBook.filePath.split("/").pop() || "book.epub";
+        const mimeTypes: Record<string, string> = {
+          epub: "application/epub+zip",
+          pdf: "application/pdf",
+          mobi: "application/x-mobipocket-ebook",
+          cbz: "application/vnd.comicbook+zip",
+          fb2: "application/x-fictionbook+xml",
+          fbz: "application/x-zip-compressed-fb2",
+        };
+        const ext = filename.split(".").pop()?.toLowerCase() || "";
         const file = new File([arrayBuffer], filename, {
-          type: "application/epub+zip",
+          type: mimeTypes[ext] || "application/octet-stream",
         });
 
         const book = {

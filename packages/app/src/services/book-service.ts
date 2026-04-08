@@ -41,10 +41,12 @@ export async function uploadBook(file: File): Promise<SimpleBook> {
     const metadata = await extractMetadataOnly(file);
 
     let coverTempFilePath: string | undefined;
-    if (format === "EPUB") {
+    if (format === "EPUB" || format === "PDF") {
       try {
-        const bookDoc = await parseEpubFile(fileData, file.name);
-        const coverBlob = await bookDoc.getCover();
+        const coverBook = format === "EPUB"
+          ? await parseEpubFile(fileData, file.name)
+          : (await new DocumentLoader(new File([fileData], file.name, { type: "application/pdf" })).open()).book;
+        const coverBlob = await coverBook.getCover();
         if (coverBlob) {
           const coverTempFileName = `cover_${bookHash}.jpg`;
           const coverTempPath = await join(tempDirPath, coverTempFileName);
@@ -79,10 +81,15 @@ export async function uploadBook(file: File): Promise<SimpleBook> {
 
 async function extractMetadataOnly(file: File): Promise<any> {
   try {
-    if (file.name.toLowerCase().endsWith(".epub")) {
+    const ext = file.name.toLowerCase().split(".").pop();
+    if (ext === "epub") {
       const arrayBuffer = await file.arrayBuffer();
       const bookDoc = await parseEpubFile(arrayBuffer, file.name);
       return bookDoc.metadata;
+    }
+    if (ext === "pdf") {
+      const { book } = await new DocumentLoader(file).open();
+      return book.metadata;
     }
 
     return {

@@ -208,6 +208,10 @@ export class DocumentLoader {
         book = await new EPUB(loader).init();
         format = "EPUB";
       }
+    } else if (await this.isPDF()) {
+      const { makePDF } = await import("foliate-js/pdf.js");
+      book = await makePDF(this.file);
+      format = "PDF";
     } else if (await (await import("foliate-js/mobi.js")).isMOBI(this.file)) {
       const fflate = await import("foliate-js/vendor/fflate.js");
       const { MOBI } = await import("foliate-js/mobi.js");
